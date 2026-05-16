@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ackknow-a1"
+version = "0.1.0"
+description = "Ackknow A1 self-hostable AI assistant framework"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "MagmaMinesTeam"}]
+dependencies = []
+
+[project.scripts]
+ackknow = "ackknow_a1.cli:main"
+
+[tool.setuptools]
+packages = ["ackknow_a1", "ackknow_a1.core", "ackknow_a1.components", "ackknow_a1.config", "ackknow_a1.datasets", "ackknow_a1.tools"]
