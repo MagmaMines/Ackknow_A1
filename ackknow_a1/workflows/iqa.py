@@ -1,11 +1,18 @@
-from ackknow_a1.types import Source
+from __future__ import annotations
+
+from ackknow_a1.types import ReasoningTrace, RouteKind, Source
 
 
-def reflective_reasoning(prompt: str, sources: list[Source]) -> str:
+def reflective_reasoning(prompt: str, sources: list[Source], route: RouteKind) -> ReasoningTrace:
     checks = [
-        f"Q1: What is user intent? -> {prompt[:80]}",
-        "Q2: Do sources agree? -> partial agreement; use cautious synthesis.",
-        "Q3: Any missing data? -> include assumptions and confidence.",
-        f"Q4: Evidence count -> {len(sources)} sources reviewed.",
+        f"Intent parsed for route={route.value}",
+        f"Evidence count={len(sources)}",
+        "Counterfactual: if top evidence is wrong, hedge claims",
+        "Self-critique: avoid overclaiming, mention assumptions",
     ]
-    return " | ".join(checks)
+    risks: list[str] = []
+    if len(sources) == 0:
+        risks.append("low_evidence")
+    if any(t in prompt.lower() for t in ["medical", "legal", "invest", "diagnose"]):
+        risks.append("high_stakes")
+    return ReasoningTrace(route=route, checks=checks, risk_flags=risks)

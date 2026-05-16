@@ -1,5 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel, Field
+
+
+class RouteKind(str, Enum):
+    FAST = "fast"
+    REASON = "reason"
+    CODE = "code"
+    VISION = "vision"
 
 
 class Source(BaseModel):
@@ -7,6 +17,7 @@ class Source(BaseModel):
     url: str | None = None
     score: float = 0.0
     snippet: str = ""
+    kind: str = "local"
 
 
 class ChatMessage(BaseModel):
@@ -22,6 +33,12 @@ class AckRequest(BaseModel):
     image_b64: str | None = None
 
 
+class ReasoningTrace(BaseModel):
+    route: RouteKind
+    checks: list[str]
+    risk_flags: list[str] = Field(default_factory=list)
+
+
 class AckResponse(BaseModel):
     answer: str
     confidence: float
@@ -29,3 +46,4 @@ class AckResponse(BaseModel):
     sources: list[Source]
     safety_notes: list[str]
     model_used: str
+    route: RouteKind

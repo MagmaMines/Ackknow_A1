@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from ackknow_a1.config.settings import AckknowSettings
 from ackknow_a1.llm.factory import LLMAdapter
 from ackknow_a1.llm.router import ModelRouter
@@ -19,14 +21,34 @@ class AckknowA1:
 
     async def run(self, req: AckRequest) -> AckResponse:
         history = self.memory.history(req.user_id)
+        route, model = self.router.route(req.prompt, has_image=bool(req.image_b64))
         sources = self.searcher.search(req.prompt)
-        reasoning = reflective_reasoning(req.prompt, sources)
-        model = self.router.route(req.prompt, has_image=bool(req.image_b64))
-        context = "\n".join([f"{m.role}: {m.content}" for m in history[-6:]])
-        prompt = f"Context:\n{context}\n\nReasoning plan:\n{reasoning}\n\nUser: {req.prompt}\nUse citations from provided sources."
+        trace = reflective_reasoning(req.prompt, sources, route)
+
+        context = "\n".join([f"{m.role}: {m.content}" for m in history[-8:]])
+        plan = " | ".join(trace.checks)
+        prompt = (
+            f"System: You are Ackknow A1. Respond in {req.locale}.\n"
+            f"Route: {route.value}\n"
+            f"Context:\n{context}\n\n"
+            f"Reasoning Plan:\n{plan}\n"
+            f"Risk Flags: {', '.join(trace.risk_flags) if trace.risk_flags else 'none'}\n\n"
+            f"User: {req.prompt}\n"
+            "Return concise but complete answer with explicit assumptions where needed."
+        )
         draft = await self.llm.generate(model=model, prompt=prompt)
-        answer = synthesize(req.prompt, draft, sources)
-        safe_answer, notes = apply_safety(answer)
+        answer = synthesize(req.prompt, draft, sources, locale=req.locale)
+        safe_answer, notes, confidence = apply_safety(answer, req.prompt)
+
         self.memory.append(req.user_id, ChatMessage(role="user", content=req.prompt))
         self.memory.append(req.user_id, ChatMessage(role="assistant", content=safe_answer))
-        return AckResponse(answer=safe_answer, confidence=0.72, reasoning_summary=reasoning, sources=sources[:8], safety_notes=notes, model_used=model)
+
+        return AckResponse(
+            answer=safe_answer,
+            confidence=confidence,
+            reasoning_summary=" | ".join(trace.checks),
+            sources=sources,
+            safety_notes=notes,
+            model_used=model,
+            route=route,
+        )
