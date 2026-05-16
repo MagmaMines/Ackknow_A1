@@ -1,32 +1,34 @@
-# Ackknow A1 v4.1 — High-Capacity Native Neural LLM + Robust Framework
+# Ackknow A1 v5 — Intelligent Hybrid Routing + Attention-Enhanced Native LLM
 
-This version focuses on realistic scale-oriented engineering improvements:
+## Major upgrades
 
-- **Target profile:** 40B-class model plan, 100K input context, large output windows.
-- **No fake runtime claims:** local runtime remains single-node; profile captures cluster-scale target.
-- **Inference optimized:** optional `torch.compile`, dynamic int8 quantization (CPU), chunk memory state reuse.
-- **Training improved:** synthetic-data augmentation + curriculum phases + multi-domain dataset mix.
+- **Intelligent hybrid routing**:
+  - Default smartest path is `Own Ackknow A1`.
+  - Optional Ollama fallback remains available (`ACKKNOW_LLM_BACKEND=ollama`).
+  - Engine now returns `model_used` with backend and checkpoint/model.
 
-## Deep improvements in this update
+- **Model versioning & checkpoints**:
+  - `own_model_checkpoint` setting selects checkpoint.
+  - Training writes `checkpoints.json` manifest with historical runs.
+  - Runtime reads manifest for version-aware profile metadata.
 
-1. **Tokenizer**
-   - Byte fallback + phrase priors + optional merge table (`merges.json`) for compressed frequent pieces.
+- **KV-cache style state management**:
+  - Added transformer KV cache in `MiniTransformer` and threaded through generation loop.
+  - RNN + memory + KV state reused per token for faster incremental decode.
 
-2. **ReasoningRNN architecture**
-   - GRU stack + LSTM refinement + memory gating.
-   - Verification head for confidence gating.
-   - Chunk-memory pathway for long-running generation state.
+- **ReasoningRNN intelligence jump**:
+  - Added **MiniTransformer block** (8 heads) after recurrent fusion.
+  - Hybrid architecture now: GRU + LSTM + gated memory + attention + verification head.
 
-3. **Inference optimization**
-   - Runtime knobs in config: compile/quantization/context/output limits.
-   - Dynamic int8 quantization on CPU for linear layers.
-   - `torch.compile(..., mode="reduce-overhead")` when available.
+- **Training quality strategy**:
+  - Curriculum phases for chat → coding → math → tools → Indian multilingual.
+  - Synthetic generation expanded and identity/pattern priors added.
+  - Dataset mix metadata includes coding/math/Indian-language corpora.
 
-4. **Training strategy**
-   - Synthetic example generation for arithmetic + coding patterns.
-   - Curriculum phases from basic chat to coding/math/tool traces.
-   - Multi-source dataset metadata for real pretraining/SFT planning.
+- **Termux / mobile-first support**:
+  - `termux_mode` disables heavy compile/quant defaults and limits generation length.
+  - `mobile_profile` config available for future per-device tuning.
 
-## Engineering realism
+## Realism note
 
-Training a true 40B model with 100K+ context requires distributed infrastructure (multi-GPU, sharding, checkpointing, pipeline parallelism). This repository now includes robust architecture and training scaffolding for that objective, while staying runnable locally for iterative development.
+A true 40B+ model with real 100K context requires distributed training/inference infra. This repo now provides robust architecture, routing, checkpointing, and optimization scaffolding for that target while remaining locally runnable for development.

@@ -10,54 +10,51 @@ from torch.utils.data import Dataset, DataLoader
 
 from ackknow_a1.llm.own_model import ByteTokenizer, ReasoningRNN
 
-
 CURRICULUM = [
-    "warmup: conversation basics + identity patterns",
-    "phase-1: coding tasks + bugfix + patch reasoning",
-    "phase-2: mathematics proofs + long derivations",
-    "phase-3: tool-use traces + verification",
-    "phase-4: multilingual Indian dialogue and intent fidelity",
+    "stage-0: identity/chat and low-risk instruction following",
+    "stage-1: code comprehension, patching, refactoring",
+    "stage-2: math proofs and multi-step symbolic reasoning",
+    "stage-3: tool-use and verification traces",
+    "stage-4: Indian multilingual depth (Hindi/Hinglish/Tamil/Awadhi)",
 ]
 
 DATASET_MIX = {
-    "FineWeb-Edu": "reasoning and language",
-    "TheStack": "code synthesis",
-    "StarCoderData": "coding style",
-    "OpenMathInstruct": "math reasoning",
-    "NuminaMath": "competition math",
+    "FineWeb-Edu": "reasoning",
+    "TheStack": "code",
+    "StarCoderData": "code",
+    "OpenMathInstruct": "math",
+    "NuminaMath": "math",
     "ProofPile2": "formal reasoning",
-    "Wikipedia": "factual grounding",
-    "IndicCorp": "Hindi/Hinglish/Tamil",
-    "UltraChat": "assistant dialogue",
+    "Wikipedia": "knowledge",
+    "IndicCorp": "Indian languages",
+    "OpenHermes": "assistant behavior",
+    "Synthetic-Ackknow": "coverage expansion",
 }
 
 
 def synthetic_pairs(n: int) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
     for i in range(n):
-        a = random.randint(1000, 9999)
-        b = random.randint(1000, 9999)
+        a, b = random.randint(1000, 9999), random.randint(1000, 9999)
         out.append({"text": f"User: solve {a}+{b}\nAssistant: {a+b}"})
-        out.append({"text": f"User: write python fn square for {i}\nAssistant: def square(x):\n    return x*x"})
+        out.append({"text": f"User: write python fn fib_{i}\nAssistant: def fib(n):\n    a,b=0,1\n    for _ in range(n):\n        a,b=b,a+b\n    return a"})
+        out.append({"text": "User: who are you\nAssistant: I am Ackknow A1 by MagmaMinesTeam."})
     return out
 
 
 class JsonlDataset(Dataset):
-    def __init__(self, file_path: str, seq_len: int = 4096, synth_count: int = 2000) -> None:
+    def __init__(self, file_path: str, seq_len: int = 4096, synth_count: int = 2_000_000) -> None:
         self.tok = ByteTokenizer()
-        rows: list[dict[str, str]] = []
-        for line in Path(file_path).read_text(encoding="utf-8").splitlines():
-            rows.append(json.loads(line))
+        rows = [json.loads(line) for line in Path(file_path).read_text(encoding="utf-8").splitlines()]
         rows.extend(synthetic_pairs(synth_count))
-
         self.samples: list[list[int]] = []
         for obj in rows:
             text = obj.get("text") or f"User: {obj.get('prompt','')}\nAssistant: {obj.get('response','')}"
             ids = self.tok.encode(text, add_bos=True, add_eos=True)
-            for i in range(0, max(1, len(ids)-1), seq_len):
-                ch = ids[i:i+seq_len+1]
-                if len(ch) > 2:
-                    self.samples.append(ch)
+            for i in range(0, max(1, len(ids) - 1), seq_len):
+                chunk = ids[i:i + seq_len + 1]
+                if len(chunk) > 2:
+                    self.samples.append(chunk)
 
     def __len__(self):
         return len(self.samples)
@@ -86,7 +83,8 @@ def main() -> None:
     ap.add_argument("--seq-len", type=int, default=4096)
     ap.add_argument("--lr", type=float, default=1.5e-4)
     ap.add_argument("--device", default="cpu")
-    ap.add_argument("--synthetic", type=int, default=2000)
+    ap.add_argument("--synthetic", type=int, default=2000000)
+    ap.add_argument("--checkpoint-name", default="model.pt")
     args = ap.parse_args()
 
     ds = JsonlDataset(args.data, args.seq_len, synth_count=args.synthetic)
@@ -101,7 +99,7 @@ def main() -> None:
         model.train()
         for xb, yb in dl:
             xb, yb = xb.to(args.device), yb.to(args.device)
-            logits, verify, _, _ = model(xb)
+            logits, verify, _, _, _ = model(xb)
             l1 = lm_loss(logits.reshape(-1, logits.size(-1)), yb.reshape(-1))
             vtarget = (yb != -100).long().reshape(-1)
             l2 = vf_loss(verify.reshape(-1, 2), vtarget)
@@ -113,7 +111,15 @@ def main() -> None:
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), out / "model.pt")
+    torch.save(model.state_dict(), out / args.checkpoint_name)
+
+    manifest_file = out / "checkpoints.json"
+    manifest = []
+    if manifest_file.exists():
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    manifest.append({"name": args.checkpoint_name, "epochs": args.epochs, "synthetic": args.synthetic})
+    manifest_file.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+
     (out / "profile.json").write_text(json.dumps({
         "target_params_b": 40.0,
         "context_goal": 100000,
@@ -122,3 +128,6 @@ def main() -> None:
         "dataset_mix": DATASET_MIX,
         "synthetic_examples": args.synthetic,
     }, indent=2), encoding="utf-8")
+
+if __name__ == "__main__":
+    main()

@@ -9,18 +9,19 @@ class LLMAdapter:
         self.own_backend = OwnAckknowLLM(
             OwnModelConfig(
                 checkpoint_dir=settings.own_model_path,
+                checkpoint_name=settings.own_model_checkpoint,
                 device=settings.own_model_device,
                 max_input_tokens=settings.own_model_max_input_tokens,
                 max_new_tokens=settings.own_model_max_new_tokens,
                 temperature=settings.own_model_temperature,
-                target_params_billions=settings.own_model_target_params_b,
                 use_compile=settings.own_model_compile,
                 quantization=settings.own_model_quantization,
+                termux_mode=settings.termux_mode,
             )
         )
         self.ollama_backend = OllamaClient(settings.ollama_base_url)
 
-    async def generate(self, model: str, prompt: str) -> str:
-        if self.settings.llm_backend == "ollama":
-            return await self.ollama_backend.generate(model=model, prompt=prompt)
-        return await self.own_backend.generate(prompt=prompt)
+    async def generate(self, route_model: str, prompt: str, prefer_own: bool = True) -> tuple[str, str]:
+        if prefer_own or self.settings.llm_backend == "own":
+            return await self.own_backend.generate(prompt=prompt), "own"
+        return await self.ollama_backend.generate(model=route_model, prompt=prompt), "ollama"

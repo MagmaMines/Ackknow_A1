@@ -30,28 +30,28 @@ class AckknowA1:
     async def run(self, req: AckRequest) -> AckResponse:
         pl = req.prompt.lower().strip()
         if pl in PREDATA:
-            pre = PREDATA[pl]
-            return AckResponse(answer=pre, confidence=0.99, reasoning_summary="predata pattern", sources=[], safety_notes=["predata_matched"], model_used="predata", route=RouteKind.FAST)
+            return AckResponse(answer=PREDATA[pl], confidence=0.99, reasoning_summary="predata pattern", sources=[], safety_notes=["predata_matched"], model_used="own:predata", route=RouteKind.FAST)
 
         history = self.memory.history(req.user_id)
-        route, model = self.router.route(req.prompt, has_image=bool(req.image_b64))
+        route, route_model = self.router.route(req.prompt, has_image=bool(req.image_b64))
         sources = self.searcher.search(req.prompt)
         trace = reflective_reasoning(req.prompt, sources, route)
 
-        context = "\n".join([f"{m.role}: {m.content}" for m in history[-10:]])
+        context = "\n".join([f"{m.role}: {m.content}" for m in history[-12:]])
         prompt = (
             f"System: You are Ackknow A1. Respond in {req.locale}.\n"
             f"Route: {route.value}\nContext:\n{context}\n\n"
             f"Reasoning Plan:\n{' | '.join(trace.checks)}\n"
             f"Risk Flags: {', '.join(trace.risk_flags) if trace.risk_flags else 'none'}\n"
             f"User: {req.prompt}\n"
-            "Give complete response with assumptions and checks."
+            "Return robust solution with assumptions, checks, and implementation detail."
         )
-        draft = await self.llm.generate(model=model, prompt=prompt)
 
+        prefer_own = self.settings.llm_backend == "own"
+        draft, backend = await self.llm.generate(route_model=route_model, prompt=prompt, prefer_own=prefer_own)
         check = intent_double_check(req.prompt, draft, [m.content for m in history])
         if not check.should_resume:
-            draft = f"[Patched after double-check: {check.reason}]\n{draft}\n\nAdded: explicit gap handling and intent alignment."
+            draft = f"[Patched after double-check: {check.reason}]\n{draft}\n\nAdded: explicit intent reconciliation."
 
         answer = synthesize(req.prompt, draft, sources, locale=req.locale)
         safe_answer, notes, confidence = apply_safety(answer, req.prompt)
@@ -65,6 +65,6 @@ class AckknowA1:
             reasoning_summary=" | ".join(trace.checks + [check.reason]),
             sources=sources,
             safety_notes=notes,
-            model_used=model,
+            model_used=f"{backend}:{route_model if backend == 'ollama' else self.settings.own_model_checkpoint}",
             route=route,
         )
