@@ -31,4 +31,4 @@
 
 ## Realism note
 
-A true 40B+ model with real 100K context requires distributed training/inference infra. This repo now provides robust architecture, routing, checkpointing, and optimization scaffolding for that target while remaining locally runnable for development.
+A experimental  219 Million parameters model with 4,000 – 8,000 output tokens,  requires distributed training/inference infra. This repo now provides robust architecture, routing, checkpointing, and optimization scaffolding for that target while remaining locally runnable for development.
