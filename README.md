@@ -1,6 +1,6 @@
-# Ackknow A1 v2.1 — Own LLM Production Grade
+# Ackknow A1 v3 — Own Neural LLM + Full Framework
 
-Ackknow A1 now supports a **true own-LLM backend** (local weights, local inference, local fine-tuning) with no dependency on proprietary hosted APIs.
+Ackknow A1 v3 is a self-hostable assistant framework with an **Ackknow-native neural language model** (no `transformers` runtime dependency), integrated reasoning, retrieval, safety, memory, tools, API, and training pipeline.
 
 ## Updated Project Structure
 
@@ -9,17 +9,17 @@ ackknow_a1/
   api/app.py
   core/unip.py
   llm/
-    own_model.py
-    factory.py
-    providers.py
-    router.py
-    training/sft.py
-  retrieval/searcher.py
-  memory/store.py
-  workflows/iqa.py
-  safety/guider.py
-  tools/orchestrator.py
-  engine.py
+    own_model.py           # Ackknow-native byte tokenizer + GRU neural LM
+    factory.py             # LLM backend abstraction
+    providers.py           # Optional Ollama fallback
+    router.py              # fast/reasoning/vision route policy
+    training/sft.py        # Own model trainer (JSONL -> checkpoint)
+  retrieval/searcher.py    # BM25 + web fallback
+  memory/store.py          # SQLite memory store
+  workflows/iqa.py         # reflective reasoning workflow
+  safety/guider.py         # safety policy filter
+  tools/orchestrator.py    # sandbox exec helpers
+  engine.py                # full orchestration pipeline
   cli.py
   config/settings.py
   types.py
@@ -27,46 +27,57 @@ Dockerfile
 docker-compose.yml
 ```
 
-## Own LLM (Production Path)
+## Ackknow Native LLM
 
-- `llm_backend=own` by default.
-- `OwnAckknowLLM` runs local Hugging Face-compatible checkpoints.
-- `ackknow-train-sft` command provides supervised fine-tuning entrypoint.
-- Ollama backend remains optional fallback for operations.
+- `OwnAckknowLLM` is built on:
+  - Byte tokenizer (`ByteTokenizer`) for universal multilingual coverage.
+  - Deep recurrent neural net (`ReasoningRNN`) for next-token prediction.
+  - Temperature + top-k sampling for controllable generation.
+- Model weights are loaded from local checkpoint path (`./models/ackknow_a1_rnn/model.pt`).
+- No hosted API requirement.
 
-## Run Locally (Own LLM)
+## Framework Capabilities
 
-1. Create/activate venv and install:
-   - `python -m venv .venv && source .venv/bin/activate`
-   - `pip install -e .`
-2. Prepare model weights locally (example path):
-   - `./models/ackknow-a1`
-3. Set env (optional):
-   - `export ACKKNOW_LLM_BACKEND=own`
-   - `export ACKKNOW_OWN_MODEL_PATH=./models/ackknow-a1`
-4. Run API:
-   - `uvicorn ackknow_a1.api.app:app --host 0.0.0.0 --port 8000`
-5. Call:
-   - `curl -X POST http://localhost:8000/v1/chat -H 'content-type: application/json' -d '{"user_id":"u1","prompt":"Design Indian multilingual AI support strategy"}'`
+- **Reasoning/IQA**: reflective checklist loop over intent, source consistency, and confidence.
+- **Searcher**: hybrid local BM25 + optional web fallback.
+- **Store**: persistent SQLite chat memory.
+- **Unip**: final synthesis with source listing.
+- **Guider**: policy checks + hallucination caution notes.
+- **Tools**: sandbox Python execution + C→WASM helper.
+- **API**: FastAPI `POST /v1/chat`, `GET /health`.
 
-## Fine-tune your own Ackknow model
+## Train Your Own Ackknow Model
 
 ```bash
-ackknow-train-sft --base mistralai/Mistral-7B-Instruct-v0.3 --data ./data/sft.jsonl --out ./models/ackknow-a1 --epochs 1
+ackknow-train-sft --data ./data/sft.jsonl --out ./models/ackknow_a1_rnn --epochs 1 --device cpu
 ```
 
-Expected JSONL examples:
+JSONL format:
 
 ```json
-{"prompt":"...", "response":"..."}
+{"prompt":"How do I deploy fastapi?", "response":"Use uvicorn ..."}
 {"text":"User: ...\nAssistant: ..."}
+```
+
+## Run Locally
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+uvicorn ackknow_a1.api.app:app --host 0.0.0.0 --port 8000
+```
+
+Test:
+
+```bash
+curl -X POST http://localhost:8000/v1/chat \
+  -H 'content-type: application/json' \
+  -d '{"user_id":"u1","prompt":"Design robust AI strategy for Indian multilingual users"}'
 ```
 
 ## Docker
 
-- `docker compose up --build`
-
-## Notes
-
-- All critical inference logic can run fully local and self-hosted.
-- You can scale further with quantization, vLLM/TGI serving, LoRA/QLoRA and distributed training.
+```bash
+docker compose up --build
+```

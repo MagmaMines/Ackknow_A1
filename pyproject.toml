@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ackknow-a1"
-version = "0.2.1"
-description = "Ackknow A1 v2 production-grade self-hostable AI assistant"
+version = "0.3.0"
+description = "Ackknow A1 production-grade self-hostable AI assistant with own neural LLM"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -29,9 +29,7 @@ dependencies = [
   "gradio>=5.0.0",
   "loguru>=0.7.2",
   "prometheus-client>=0.20.0",
-  "transformers>=4.45.0",
-  "torch>=2.3.0",
-  "datasets>=2.20.0",
+  "torch>=2.3.0"
 ]
 [project.optional-dependencies]
 dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0", "ruff>=0.6.0"]
