@@ -10,8 +10,12 @@ class LLMAdapter:
             OwnModelConfig(
                 checkpoint_dir=settings.own_model_path,
                 device=settings.own_model_device,
+                max_input_tokens=settings.own_model_max_input_tokens,
                 max_new_tokens=settings.own_model_max_new_tokens,
                 temperature=settings.own_model_temperature,
+                target_params_billions=settings.own_model_target_params_b,
+                use_compile=settings.own_model_compile,
+                quantization=settings.own_model_quantization,
             )
         )
         self.ollama_backend = OllamaClient(settings.ollama_base_url)

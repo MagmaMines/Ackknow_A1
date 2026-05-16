@@ -1,40 +1,32 @@
-# Ackknow A1 v4 — Deep Native Neural LLM + Robust Framework
+# Ackknow A1 v4.1 — High-Capacity Native Neural LLM + Robust Framework
 
-Ackknow A1 v4 is upgraded for **deep reasoning orchestration**, **double-check anti-hallucination control**, and a stronger **native neural LLM stack** (no transformers runtime).
+This version focuses on realistic scale-oriented engineering improvements:
 
-## What was deeply improved
+- **Target profile:** 40B-class model plan, 100K input context, large output windows.
+- **No fake runtime claims:** local runtime remains single-node; profile captures cluster-scale target.
+- **Inference optimized:** optional `torch.compile`, dynamic int8 quantization (CPU), chunk memory state reuse.
+- **Training improved:** synthetic-data augmentation + curriculum phases + multi-domain dataset mix.
 
-- **Native LLM core upgraded**:
-  - ByteTokenizer now includes phrase priors for identity/pattern prompts.
-  - ReasoningRNN upgraded to GRU+LSTM hybrid with memory gate and verification head.
-  - Decoder uses verification confidence filtering + top-k sampling.
-- **Long-context target profile**:
-  - Config/profile tracks 300K input + 300K output and 60B target profile metadata.
-- **Training pipeline deepened**:
-  - Added multi-dataset mix metadata (FineWeb-Edu, TheStack, OpenMathInstruct, NuminaMath, Wikipedia, IndicCorp, OpenHermes).
-  - Joint LM + verification loss for lower hallucination behavior.
-- **Double-check system**:
-  - Tool pause-and-verify gate checks strict-intent adequacy and chat-history conflicts.
-  - If mismatch is detected, assistant auto-patches response before finalize.
-- **PreData pattern responses**:
-  - High-priority instant patterns for: “who are you”, “who own you”, “hello”, “whatsup”.
-- **ReasoningTrace robustness**:
-  - Route-aware IQA checks, high-stakes flags, and explicit confidence shaping.
+## Deep improvements in this update
 
-## Architecture (v4)
+1. **Tokenizer**
+   - Byte fallback + phrase priors + optional merge table (`merges.json`) for compressed frequent pieces.
 
-```text
-ackknow_a1/
-  llm/own_model.py         # ByteTokenizer + ReasoningRNN (GRU/LSTM hybrid)
-  llm/training/sft.py      # Native PyTorch trainer + dataset mix profile
-  tools/orchestrator.py    # Double-check pause/verify mechanism
-  workflows/iqa.py         # Deep reflective reasoning trace
-  retrieval/searcher.py    # Local BM25 + web + rerank + dedup
-  memory/store.py          # Persistent chat memory
-  safety/guider.py         # Constitutional safety + confidence calibration
-  engine.py                # End-to-end orchestration with patch-on-mismatch
-```
+2. **ReasoningRNN architecture**
+   - GRU stack + LSTM refinement + memory gating.
+   - Verification head for confidence gating.
+   - Chunk-memory pathway for long-running generation state.
 
-## Important engineering note
+3. **Inference optimization**
+   - Runtime knobs in config: compile/quantization/context/output limits.
+   - Dynamic int8 quantization on CPU for linear layers.
+   - `torch.compile(..., mode="reduce-overhead")` when available.
 
-A true **60B-parameter training run with 300K/300K token windows** requires distributed GPU clusters, advanced sharding, and high-throughput data pipelines. v4 now includes the architecture/profile/training scaffolding for that target and robust local operation; cluster-scale execution is the next infra phase.
+4. **Training strategy**
+   - Synthetic example generation for arithmetic + coding patterns.
+   - Curriculum phases from basic chat to coding/math/tool traces.
+   - Multi-source dataset metadata for real pretraining/SFT planning.
+
+## Engineering realism
+
+Training a true 40B model with 100K+ context requires distributed infrastructure (multi-GPU, sharding, checkpointing, pipeline parallelism). This repository now includes robust architecture and training scaffolding for that objective, while staying runnable locally for iterative development.
