@@ -1,45 +1,61 @@
-# Ackknow A1
+# Ackknow A1 v2
 
-Ackknow A1 is a self-hostable MIT-licensed AI assistant framework by MagmaMinesTeam for daily use and professional workflows.
+Production-grade, self-hostable AI assistant with modular architecture (Unip, IQA, Confic, Searcher, Guider, Store), Ollama-native inference, hybrid retrieval, persistent memory, and FastAPI serving.
 
-## Architecture
+## Updated Project Structure
 
-Ackknow A1 is organized into required components:
-
-- **Unip**: final answer shaping and response synthesis.
-- **IQA**: reflective reasoning, self-questioning, validation loops.
-- **Confic**: multimodal pattern and image-signal analysis.
-- **Searcher**: retrieval, ranking, fetch orchestration and evidence packaging.
-- **DataSets**: dataset catalog and restoration metadata for training/runtime grounding.
-- **Guider**: policy, safety, copyright-link guidance output layer.
-- **Store**: conversations, user profile, consent flags, state and memory.
-
-It includes:
-- long-context tokenizer settings (500k input / 230k output targets)
-- personalization hooks
-- multilingual routing for English variants, Hindi dialect-space, Hinglish, Tamil
-- preloaded domain facts and update hooks
-- pluggable tools for sandbox tasks (including code tasks and C-to-WASM workflows)
-
-## Quick start
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-ackknow chat --user "Explain Apple vs Samsung strategy in India"
+```text
+ackknow_a1/
+  api/app.py
+  core/unip.py
+  llm/providers.py
+  llm/router.py
+  retrieval/searcher.py
+  memory/store.py
+  workflows/iqa.py
+  safety/guider.py
+  tools/orchestrator.py
+  engine.py
+  cli.py
+  config/settings.py
+  types.py
+Dockerfile
+docker-compose.yml
 ```
 
-## Example
+## Key Features
 
-```bash
-ackknow ask "Create a copyright-safe answer with sources for modern AI model selection"
-```
+- **LLM integration layer**: Ollama provider + smart routing (fast/reasoning/vision).
+- **Searcher (real hybrid)**: BM25 + web fallback via DuckDuckGo (extensible to Tavily/Serper/Brave).
+- **IQA reasoning loop**: reflective multi-check chain with evidence checks.
+- **Confic-ready**: model router supports vision model path and image-aware routing.
+- **Store**: SQLite-backed persistent memory.
+- **Unip**: final synthesis with citations and confidence output.
+- **Guider**: constitutional-style safety checks and anti-hallucination notes.
+- **Tooling**: sandbox Python execution and C→WASM helper.
+- **Production API**: FastAPI `/v1/chat` + health endpoint.
+- **Self-hostable**: Docker + docker-compose.
 
-## Design goals
+## Run with Ollama (Local)
 
-- Production-oriented modularity instead of a toy prototype
-- Clear component contracts
-- Source-aware answer generation
-- Research + assistant workflows under one runtime
-- Easy local extension for teams
+1. Install and start Ollama.
+2. Pull models:
+   - `ollama pull qwen2.5:7b-instruct`
+   - `ollama pull qwen2.5:14b-instruct`
+   - `ollama pull llava:13b`
+3. Install app:
+   - `python -m venv .venv && source .venv/bin/activate`
+   - `pip install -e .`
+4. Start API:
+   - `uvicorn ackknow_a1.api.app:app --reload --port 8000`
+5. Test:
+   - `curl -X POST http://localhost:8000/v1/chat -H 'content-type: application/json' -d '{"user_id":"u1","prompt":"Design a multilingual AI support strategy for India"}'`
+
+## Docker
+
+- `docker compose up --build`
+
+## Notes
+
+- Default is local-first and self-hosted.
+- You can swap in Chroma/Qdrant embeddings and rerankers in `retrieval/searcher.py`.

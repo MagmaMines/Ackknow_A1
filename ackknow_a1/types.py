@@ -1,25 +1,31 @@
-from dataclasses import dataclass, field
-from typing import Any
+from datetime import datetime
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class Evidence:
-    source: str
+class Source(BaseModel):
+    title: str
     url: str | None = None
-    confidence: float = 0.5
+    score: float = 0.0
+    snippet: str = ""
 
 
-@dataclass
-class QueryContext:
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AckRequest(BaseModel):
     user_id: str
-    locale: str = "en-US"
-    consent_memory: bool = True
-    metadata: dict[str, Any] = field(default_factory=dict)
+    prompt: str
+    locale: str = "en-IN"
+    image_b64: str | None = None
 
 
-@dataclass
-class AckResponse:
+class AckResponse(BaseModel):
     answer: str
+    confidence: float
     reasoning_summary: str
-    evidence: list[Evidence]
-    safeguards: list[str]
+    sources: list[Source]
+    safety_notes: list[str]
+    model_used: str

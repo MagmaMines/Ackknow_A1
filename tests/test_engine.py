@@ -1,11 +1,19 @@
+import pytest
 from ackknow_a1.engine import AckknowA1
-from ackknow_a1.types import QueryContext
+from ackknow_a1.types import AckRequest
 
 
-def test_engine_roundtrip():
+@pytest.mark.asyncio
+async def test_engine_roundtrip_without_external_llm(monkeypatch):
     model = AckknowA1()
-    ctx = QueryContext(user_id="u1")
-    resp = model.run("Plan my coding workflow", ctx)
-    assert "Ackknow A1 response" in resp.answer
-    assert len(resp.safeguards) >= 1
-    assert len(model.datasets) >= 100
+
+    async def fake_generate(model: str, prompt: str, temperature: float = 0.2):
+        return "Here is a robust answer with steps and rationale."
+
+    monkeypatch.setattr(model.llm, "generate", fake_generate)
+    monkeypatch.setattr(model.searcher, "search", lambda q: [])
+
+    resp = await model.run(AckRequest(user_id="u1", prompt="Plan enterprise AI architecture"))
+    assert "Answer:" in resp.answer
+    assert resp.model_used
+    assert resp.confidence > 0

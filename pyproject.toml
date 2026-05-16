@@ -4,16 +4,49 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ackknow-a1"
-version = "0.1.0"
-description = "Ackknow A1 self-hostable AI assistant framework"
+version = "0.2.0"
+description = "Ackknow A1 v2 production-grade self-hostable AI assistant"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "MagmaMinesTeam"}]
-dependencies = []
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "sqlmodel>=0.0.22",
+  "alembic>=1.13.0",
+  "httpx>=0.27.0",
+  "orjson>=3.10.0",
+  "tenacity>=9.0.0",
+  "cachetools>=5.4.0",
+  "chromadb>=0.5.5",
+  "rank-bm25>=0.2.2",
+  "duckduckgo-search>=6.2.0",
+  "numpy>=1.26.0",
+  "python-multipart>=0.0.9",
+  "gradio>=5.0.0",
+  "loguru>=0.7.2",
+  "prometheus-client>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0", "ruff>=0.6.0"]
 
 [project.scripts]
 ackknow = "ackknow_a1.cli:main"
 
 [tool.setuptools]
-packages = ["ackknow_a1", "ackknow_a1.core", "ackknow_a1.components", "ackknow_a1.config", "ackknow_a1.datasets", "ackknow_a1.tools"]
+packages = [
+  "ackknow_a1",
+  "ackknow_a1.api",
+  "ackknow_a1.core",
+  "ackknow_a1.llm",
+  "ackknow_a1.retrieval",
+  "ackknow_a1.memory",
+  "ackknow_a1.safety",
+  "ackknow_a1.workflows",
+  "ackknow_a1.tools",
+  "ackknow_a1.observability",
+]

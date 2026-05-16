@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  ackknow:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ACKKNOW_OLLAMA_BASE_URL: http://host.docker.internal:11434
+      ACKKNOW_WEB_SEARCH_ENABLED: "true"
+    volumes:
+      - ./:/app
