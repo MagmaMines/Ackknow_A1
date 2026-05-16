@@ -2,7 +2,7 @@
 
 ---
 
-Ackknow A1 is a **100K** context window Large Language Model. A Experimental Project by **MagmaMinesTeam**.
+Ackknow A1 is a **10K** context window Large Language Model. A Experimental Project by **MagmaMinesTeam**.
 
 **Usecase:**
 - Learning.
