@@ -1,4 +1,7 @@
-# Ackknow A1 v5 — Intelligent Hybrid Routing + Attention-Enhanced Native LLM
+# Ackknow A1 v5 — Intelligent Hybrid Routing Framwork ans Native LLM 
+
+---
+
 Ackknow A1 is a **100K** context window Large Language Model. A Experimental Project by **MagmaMinesTeam**.
 
 **Usecase:**
