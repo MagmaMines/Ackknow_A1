@@ -1,6 +1,16 @@
 # Ackknow A1 v5 — Intelligent Hybrid Routing + Attention-Enhanced Native LLM
+Ackknow A1 is a **100K** context window Large Language Model. A Experimental Project by **MagmaMinesTeam**.
 
-## Major upgrades
+**Usecase:**
+- Learning.
+- Small tasks.
+- Daily usecases.
+- Mobile users.
+  
+  ---
+  **Note: this is a experimental open-source project. Bugs & issue and Ai misinformation is **normal** for this type of project's.**
+  
+## Information ℹ️ 
 
 - **Intelligent hybrid routing**:
   - Default smartest path is `Own Ackknow A1`.
