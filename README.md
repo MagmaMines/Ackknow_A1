@@ -1,6 +1,6 @@
-# Ackknow A1 v2
+# Ackknow A1 v2.1 — Own LLM Production Grade
 
-Production-grade, self-hostable AI assistant with modular architecture (Unip, IQA, Confic, Searcher, Guider, Store), Ollama-native inference, hybrid retrieval, persistent memory, and FastAPI serving.
+Ackknow A1 now supports a **true own-LLM backend** (local weights, local inference, local fine-tuning) with no dependency on proprietary hosted APIs.
 
 ## Updated Project Structure
 
@@ -8,8 +8,12 @@ Production-grade, self-hostable AI assistant with modular architecture (Unip, IQ
 ackknow_a1/
   api/app.py
   core/unip.py
-  llm/providers.py
-  llm/router.py
+  llm/
+    own_model.py
+    factory.py
+    providers.py
+    router.py
+    training/sft.py
   retrieval/searcher.py
   memory/store.py
   workflows/iqa.py
@@ -23,33 +27,40 @@ Dockerfile
 docker-compose.yml
 ```
 
-## Key Features
+## Own LLM (Production Path)
 
-- **LLM integration layer**: Ollama provider + smart routing (fast/reasoning/vision).
-- **Searcher (real hybrid)**: BM25 + web fallback via DuckDuckGo (extensible to Tavily/Serper/Brave).
-- **IQA reasoning loop**: reflective multi-check chain with evidence checks.
-- **Confic-ready**: model router supports vision model path and image-aware routing.
-- **Store**: SQLite-backed persistent memory.
-- **Unip**: final synthesis with citations and confidence output.
-- **Guider**: constitutional-style safety checks and anti-hallucination notes.
-- **Tooling**: sandbox Python execution and C→WASM helper.
-- **Production API**: FastAPI `/v1/chat` + health endpoint.
-- **Self-hostable**: Docker + docker-compose.
+- `llm_backend=own` by default.
+- `OwnAckknowLLM` runs local Hugging Face-compatible checkpoints.
+- `ackknow-train-sft` command provides supervised fine-tuning entrypoint.
+- Ollama backend remains optional fallback for operations.
 
-## Run with Ollama (Local)
+## Run Locally (Own LLM)
 
-1. Install and start Ollama.
-2. Pull models:
-   - `ollama pull qwen2.5:7b-instruct`
-   - `ollama pull qwen2.5:14b-instruct`
-   - `ollama pull llava:13b`
-3. Install app:
+1. Create/activate venv and install:
    - `python -m venv .venv && source .venv/bin/activate`
    - `pip install -e .`
-4. Start API:
-   - `uvicorn ackknow_a1.api.app:app --reload --port 8000`
-5. Test:
-   - `curl -X POST http://localhost:8000/v1/chat -H 'content-type: application/json' -d '{"user_id":"u1","prompt":"Design a multilingual AI support strategy for India"}'`
+2. Prepare model weights locally (example path):
+   - `./models/ackknow-a1`
+3. Set env (optional):
+   - `export ACKKNOW_LLM_BACKEND=own`
+   - `export ACKKNOW_OWN_MODEL_PATH=./models/ackknow-a1`
+4. Run API:
+   - `uvicorn ackknow_a1.api.app:app --host 0.0.0.0 --port 8000`
+5. Call:
+   - `curl -X POST http://localhost:8000/v1/chat -H 'content-type: application/json' -d '{"user_id":"u1","prompt":"Design Indian multilingual AI support strategy"}'`
+
+## Fine-tune your own Ackknow model
+
+```bash
+ackknow-train-sft --base mistralai/Mistral-7B-Instruct-v0.3 --data ./data/sft.jsonl --out ./models/ackknow-a1 --epochs 1
+```
+
+Expected JSONL examples:
+
+```json
+{"prompt":"...", "response":"..."}
+{"text":"User: ...\nAssistant: ..."}
+```
 
 ## Docker
 
@@ -57,5 +68,5 @@ docker-compose.yml
 
 ## Notes
 
-- Default is local-first and self-hosted.
-- You can swap in Chroma/Qdrant embeddings and rerankers in `retrieval/searcher.py`.
+- All critical inference logic can run fully local and self-hosted.
+- You can scale further with quantization, vLLM/TGI serving, LoRA/QLoRA and distributed training.

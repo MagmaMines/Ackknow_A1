@@ -7,7 +7,7 @@ from ackknow_a1.types import AckRequest
 async def test_engine_roundtrip_without_external_llm(monkeypatch):
     model = AckknowA1()
 
-    async def fake_generate(model: str, prompt: str, temperature: float = 0.2):
+    async def fake_generate(model: str, prompt: str):
         return "Here is a robust answer with steps and rationale."
 
     monkeypatch.setattr(model.llm, "generate", fake_generate)

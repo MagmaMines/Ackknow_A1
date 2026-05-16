@@ -6,14 +6,19 @@ class AckknowSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ACKKNOW_", env_file=".env", extra="ignore")
 
     app_name: str = "Ackknow A1"
-    app_version: str = "2.0.0"
+    app_version: str = "2.1.0"
     default_locale: str = "en-IN"
     supported_languages: list[str] = Field(default_factory=lambda: [
         "en-IN", "en-US", "en-UK", "en-AU", "en-NZ", "hi", "hinglish", "awadhi", "kanpuriya", "ta"
     ])
-
     tokenizer_input_max: int = 500_000
     tokenizer_output_max: int = 230_000
+
+    llm_backend: str = "own"  # own|ollama
+    own_model_path: str = "./models/ackknow-a1"
+    own_model_device: str = "cpu"
+    own_model_max_new_tokens: int = 768
+    own_model_temperature: float = 0.2
 
     ollama_base_url: str = "http://localhost:11434"
     ollama_fast_model: str = "qwen2.5:7b-instruct"
@@ -22,6 +27,5 @@ class AckknowSettings(BaseSettings):
 
     sqlite_url: str = "sqlite:///./ackknow.db"
     chroma_path: str = "./chroma_db"
-
     web_search_enabled: bool = True
     max_web_results: int = 5

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ackknow-a1"
-version = "0.2.0"
+version = "0.2.1"
 description = "Ackknow A1 v2 production-grade self-hostable AI assistant"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -29,24 +29,19 @@ dependencies = [
   "gradio>=5.0.0",
   "loguru>=0.7.2",
   "prometheus-client>=0.20.0",
+  "transformers>=4.45.0",
+  "torch>=2.3.0",
+  "datasets>=2.20.0",
 ]
-
 [project.optional-dependencies]
 dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0", "ruff>=0.6.0"]
 
 [project.scripts]
 ackknow = "ackknow_a1.cli:main"
+ackknow-train-sft = "ackknow_a1.llm.training.sft:main"
 
 [tool.setuptools]
 packages = [
-  "ackknow_a1",
-  "ackknow_a1.api",
-  "ackknow_a1.core",
-  "ackknow_a1.llm",
-  "ackknow_a1.retrieval",
-  "ackknow_a1.memory",
-  "ackknow_a1.safety",
-  "ackknow_a1.workflows",
-  "ackknow_a1.tools",
-  "ackknow_a1.observability",
+  "ackknow_a1", "ackknow_a1.api", "ackknow_a1.core", "ackknow_a1.llm", "ackknow_a1.llm.training",
+  "ackknow_a1.retrieval", "ackknow_a1.memory", "ackknow_a1.safety", "ackknow_a1.workflows", "ackknow_a1.tools", "ackknow_a1.observability",
 ]

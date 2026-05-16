@@ -1,5 +1,5 @@
 from ackknow_a1.config.settings import AckknowSettings
-from ackknow_a1.llm.providers import OllamaClient
+from ackknow_a1.llm.factory import LLMAdapter
 from ackknow_a1.llm.router import ModelRouter
 from ackknow_a1.memory.store import MemoryStore
 from ackknow_a1.retrieval.searcher import HybridSearcher
@@ -13,7 +13,7 @@ class AckknowA1:
     def __init__(self, settings: AckknowSettings | None = None) -> None:
         self.settings = settings or AckknowSettings()
         self.router = ModelRouter(self.settings)
-        self.llm = OllamaClient(self.settings.ollama_base_url)
+        self.llm = LLMAdapter(self.settings)
         self.searcher = HybridSearcher(self.settings.web_search_enabled, self.settings.max_web_results)
         self.memory = MemoryStore(self.settings.sqlite_url)
 
