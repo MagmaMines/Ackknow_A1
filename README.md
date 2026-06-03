@@ -1,4 +1,4 @@
-# Ackknow A1 v5 — Intelligent Hybrid Routing Framwork and Native LLM 
+# Ackknow A1 v5 — Intelligent Hybrid Routing Framework and Native LLM 
 
 ---
 
