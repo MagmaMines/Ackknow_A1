@@ -45,3 +45,10 @@ Ackknow A1 is a **10K** context window Large Language Model. A Experimental Proj
 ## Realism note
 
 A experimental  219 Million parameters model with 4,000 – 8,000 output tokens,  requires distributed training/inference infra. This repo now provides robust architecture, routing, checkpointing, and optimization scaffolding for that target while remaining locally runnable for development.
+
+## Misinformation and presentation:
+
+Ai can't say the truth.
+it's just a pattern.
+and patterns can break or wrong.
+
