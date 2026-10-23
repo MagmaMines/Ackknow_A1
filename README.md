@@ -42,6 +42,27 @@ Ackknow A1 is a **10K** context window Large Language Model. A Experimental Proj
   - `termux_mode` disables heavy compile/quant defaults and limits generation length.
   - `mobile_profile` config available for future per-device tuning.
 
+## Coding agent (v5.1) 🧑‍💻
+
+Code requests (detected by language names, code fences, tracebacks, `implement`, `refactor`, …) go through a
+**generate → verify → repair** loop (`ackknow_a1/workflows/coding.py`):
+
+1. A senior-engineer system prompt asks for complete, runnable, fenced code with edge cases and self-tests.
+2. Every code block is checked: placeholder/TODO detection, Python `ast` syntax check, `json`, `node --check`, `bash -n`.
+3. Optionally (`ACKKNOW_CODE_EXEC_ENABLED=true`) Python blocks are executed in an isolated subprocess
+   (`python -I`, temp dir, minimal env, timeout) so failing `assert` self-tests are caught.
+4. Failures are fed back to the model for up to `ACKKNOW_CODE_MAX_REPAIR_ROUNDS` repair attempts.
+5. The response reports `code_verified` / `code_verification_failed` and adjusts confidence.
+
+Code routes use `ACKKNOW_OLLAMA_CODE_MODEL` (default `qwen2.5-coder:7b-instruct`) at `ACKKNOW_CODE_TEMPERATURE=0.2`.
+If no trained own checkpoint exists, Ackknow automatically falls back to Ollama (and back to the own model if
+Ollama is unreachable); disable with `ACKKNOW_LLM_FALLBACK_ENABLED=false`.
+
+```bash
+ollama pull qwen2.5-coder:7b-instruct
+ACKKNOW_CODE_EXEC_ENABLED=true ackknow "Write a Python function that merges overlapping intervals"
+```
+
 ## Realism note
 
 A experimental  219 Million parameters model with 4,000 – 8,000 output tokens,  requires distributed training/inference infra. This repo now provides robust architecture, routing, checkpointing, and optimization scaffolding for that target while remaining locally runnable for development.

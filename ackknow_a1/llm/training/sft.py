@@ -32,12 +32,78 @@ DATASET_MIX = {
 }
 
 
+CODE_TASKS = [
+    (
+        "fib",
+        "return the n-th Fibonacci number",
+        "def {name}(n: int) -> int:\n"
+        "    \"\"\"Return the n-th Fibonacci number (fib(0) == 0).\"\"\"\n"
+        "    if n < 0:\n        raise ValueError(\"n must be non-negative\")\n"
+        "    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a\n\n"
+        "assert {name}(0) == 0 and {name}(10) == 55",
+    ),
+    (
+        "is_palindrome",
+        "check if a string is a palindrome ignoring case and non-alphanumerics",
+        "def {name}(s: str) -> bool:\n"
+        "    \"\"\"Return True if s reads the same backwards, ignoring case and punctuation.\"\"\"\n"
+        "    cleaned = [c.lower() for c in s if c.isalnum()]\n    return cleaned == cleaned[::-1]\n\n"
+        "assert {name}(\"A man, a plan, a canal: Panama\") and not {name}(\"abc\")",
+    ),
+    (
+        "binary_search",
+        "find the index of a target in a sorted list, or -1",
+        "def {name}(items: list[int], target: int) -> int:\n"
+        "    \"\"\"Return index of target in sorted items, or -1 if missing.\"\"\"\n"
+        "    lo, hi = 0, len(items) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n"
+        "        if items[mid] == target:\n            return mid\n"
+        "        if items[mid] < target:\n            lo = mid + 1\n        else:\n            hi = mid - 1\n    return -1\n\n"
+        "assert {name}([1, 3, 5, 7], 5) == 2 and {name}([], 1) == -1",
+    ),
+    (
+        "word_count",
+        "count how often each word appears in a text",
+        "from collections import Counter\n\n\ndef {name}(text: str) -> dict[str, int]:\n"
+        "    \"\"\"Return a case-insensitive word frequency map.\"\"\"\n"
+        "    return dict(Counter(text.lower().split()))\n\n"
+        "assert {name}(\"a b A\") == {{\"a\": 2, \"b\": 1}} and {name}(\"\") == {{}}",
+    ),
+    (
+        "flatten",
+        "flatten an arbitrarily nested list",
+        "def {name}(items: list) -> list:\n"
+        "    \"\"\"Flatten nested lists into a single list, preserving order.\"\"\"\n"
+        "    out: list = []\n    for item in items:\n"
+        "        if isinstance(item, list):\n            out.extend({name}(item))\n        else:\n            out.append(item)\n    return out\n\n"
+        "assert {name}([1, [2, [3, 4]], []]) == [1, 2, 3, 4]",
+    ),
+    (
+        "chunk",
+        "split a list into chunks of size k",
+        "def {name}(items: list, k: int) -> list[list]:\n"
+        "    \"\"\"Split items into consecutive chunks of length k (last may be shorter).\"\"\"\n"
+        "    if k <= 0:\n        raise ValueError(\"k must be positive\")\n"
+        "    return [items[i:i + k] for i in range(0, len(items), k)]\n\n"
+        "assert {name}([1, 2, 3, 4, 5], 2) == [[1, 2], [3, 4], [5]]",
+    ),
+]
+CODE_PHRASINGS = [
+    "write python fn {name} to {desc}",
+    "Write a Python function `{name}` that will {desc}.",
+    "python code: {desc} (function name {name})",
+    "Implement {name} in Python to {desc}, with tests.",
+]
+
+
 def synthetic_pairs(n: int) -> list[dict[str, str]]:
     out: list[dict[str, str]] = []
     for i in range(n):
         a, b = random.randint(1000, 9999), random.randint(1000, 9999)
         out.append({"text": f"User: solve {a}+{b}\nAssistant: {a+b}"})
-        out.append({"text": f"User: write python fn fib_{i}\nAssistant: def fib(n):\n    a,b=0,1\n    for _ in range(n):\n        a,b=b,a+b\n    return a"})
+        base, desc, template = random.choice(CODE_TASKS)
+        name = base if i % 2 == 0 else f"{base}_{i}"
+        ask = random.choice(CODE_PHRASINGS).format(name=name, desc=desc)
+        out.append({"text": f"User: {ask}\nAssistant: Approach: {desc}, handle edge cases, verify with asserts.\n```python\n{template.format(name=name)}\n```"})
         out.append({"text": "User: who are you\nAssistant: I am Ackknow A1 by MagmaMinesTeam."})
     return out
 

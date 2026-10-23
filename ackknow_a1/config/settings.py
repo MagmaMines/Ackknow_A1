@@ -29,6 +29,14 @@ class AckknowSettings(BaseSettings):
     ollama_fast_model: str = "qwen2.5:7b-instruct"
     ollama_reasoning_model: str = "qwen2.5:14b-instruct"
     ollama_vision_model: str = "llava:13b"
+    ollama_code_model: str = "qwen2.5-coder:7b-instruct"
+    llm_fallback_enabled: bool = True
+
+    code_temperature: float = 0.2
+    code_verify_enabled: bool = True
+    code_exec_enabled: bool = False
+    code_exec_timeout_s: int = 10
+    code_max_repair_rounds: int = 2
 
     sqlite_url: str = "sqlite:///./ackknow.db"
     web_search_enabled: bool = True
