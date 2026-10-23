@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
 import subprocess
+import sys
+import tempfile
 from dataclasses import dataclass
 
 
@@ -10,9 +13,39 @@ class DoubleCheckResult:
     reason: str
 
 
+@dataclass
+class SandboxResult:
+    ok: bool
+    output: str
+    timed_out: bool = False
+
+
+def run_python_sandboxed(code: str, timeout: float = 15) -> SandboxResult:
+    """Run code in an isolated interpreter (-I), throwaway cwd, minimal env, no stdin."""
+    with tempfile.TemporaryDirectory(prefix="ackknow_sbx_") as tmp:
+        script = os.path.join(tmp, "main.py")
+        with open(script, "w", encoding="utf-8") as fh:
+            fh.write(code)
+        env = {"PATH": os.environ.get("PATH", ""), "PYTHONIOENCODING": "utf-8", "HOME": tmp}
+        try:
+            p = subprocess.run(
+                [sys.executable, "-I", script],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                cwd=tmp,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return SandboxResult(False, f"Execution timed out after {timeout}s", timed_out=True)
+    output = (p.stdout + p.stderr).replace(tmp, "<sandbox>")
+    return SandboxResult(p.returncode == 0, output[-4000:])
+
+
 def sandbox_python(code: str) -> str:
-    p = subprocess.run(["python", "-c", code], capture_output=True, text=True, timeout=15, check=False)
-    return p.stdout if p.returncode == 0 else p.stderr
+    return run_python_sandboxed(code).output
 
 
 def intent_double_check(user_prompt: str, draft: str, history: list[str]) -> DoubleCheckResult:

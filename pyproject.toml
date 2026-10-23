@@ -38,8 +38,11 @@ dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0", "ruff>=0.6.0"]
 ackknow = "ackknow_a1.cli:main"
 ackknow-train-sft = "ackknow_a1.llm.training.sft:main"
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
 [tool.setuptools]
 packages = [
   "ackknow_a1", "ackknow_a1.api", "ackknow_a1.core", "ackknow_a1.llm", "ackknow_a1.llm.training",
-  "ackknow_a1.retrieval", "ackknow_a1.memory", "ackknow_a1.safety", "ackknow_a1.workflows", "ackknow_a1.tools", "ackknow_a1.observability",
+  "ackknow_a1.retrieval", "ackknow_a1.memory", "ackknow_a1.safety", "ackknow_a1.workflows", "ackknow_a1.tools",
 ]

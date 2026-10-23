@@ -155,7 +155,8 @@ class OwnAckknowLLM:
     def _load_checkpoint(self, checkpoint_dir: str, checkpoint_name: str) -> None:
         path = Path(checkpoint_dir)
         ckpt = path / checkpoint_name
-        if ckpt.exists():
+        self.has_checkpoint = ckpt.exists()
+        if self.has_checkpoint:
             state = torch.load(ckpt, map_location=self.device)
             self.model.load_state_dict(state, strict=False)
         manifest = path / "checkpoints.json"
